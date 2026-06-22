@@ -1,30 +1,37 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Building2, GraduationCap, Users, Shield, Eye, EyeOff } from 'lucide-react'
-import { useAuth, UserRole } from '../context/AuthContext'
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
 type AuthMode = 'signin' | 'signup'
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('signin')
-  const [role, setRole] = useState<UserRole>('student')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', institution: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' })
   const { login, signup } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const email = formData.email.trim().toLowerCase()
+
+    if (!EMAIL_PATTERN.test(email)) {
+      toast.error('Enter a valid email address.')
+      return
+    }
+
     setLoading(true)
     try {
       if (mode === 'signin') {
-        await login(formData.email, formData.password)
+        await login(email, formData.password)
         toast.success('Welcome back!')
       } else {
-        await signup({ name: formData.name, email: formData.email, password: formData.password, role, institution: formData.institution })
+        await signup({ name: formData.name.trim(), email, password: formData.password })
         toast.success('Account created!')
       }
       const user = JSON.parse(localStorage.getItem('adhoc_user') || '{}')
@@ -35,12 +42,6 @@ export default function AuthPage() {
       setLoading(false)
     }
   }
-
-  const roles: { value: UserRole; label: string; icon: any }[] = [
-    { value: 'student', label: 'Student', icon: GraduationCap },
-    { value: 'faculty', label: 'Faculty', icon: Users },
-    { value: 'admin', label: 'Admin', icon: Shield },
-  ]
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-6 relative overflow-hidden">
@@ -75,34 +76,18 @@ export default function AuthPage() {
             <motion.form key={mode} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-1">{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h2>
-                <p className="text-zinc-400 text-sm">{mode === 'signin' ? 'Sign in to your ADhoc workspace.' : 'Choose your role and join your institution.'}</p>
+                <p className="text-zinc-400 text-sm">{mode === 'signin' ? 'Sign in to your ADhoc workspace.' : 'Create your student account.'}</p>
               </div>
               {mode === 'signup' && (
-                <>
-                  <div className="grid grid-cols-3 gap-2">
-                    {roles.map((r) => (
-                      <button key={r.value} type="button" onClick={() => setRole(r.value)}
-                        className={`p-3 rounded-xl border text-left transition-all ${role === r.value ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/10 hover:border-white/20'}`}>
-                        <r.icon size={18} className={role === r.value ? 'text-purple-400' : 'text-zinc-500'} />
-                        <p className={`text-xs font-medium mt-2 ${role === r.value ? 'text-white' : 'text-zinc-400'}`}>{r.label}</p>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="relative">
-                    <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-                    <input type="text" placeholder="Full name" value={formData.name} onChange={(e) => setFormData({...formData,name:e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 transition-all" required />
-                  </div>
-                  <div className="relative">
-                    <Building2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-                    <input type="text" placeholder="Institution" value={formData.institution} onChange={(e) => setFormData({...formData,institution:e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 transition-all" />
-                  </div>
-                </>
+                <div className="relative">
+                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                  <input type="text" placeholder="Full name" value={formData.name} onChange={(e) => setFormData({...formData,name:e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 transition-all" required />
+                </div>
               )}
               <div className="relative">
                 <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-                <input type="email" placeholder="you@institution.edu" value={formData.email} onChange={(e) => setFormData({...formData,email:e.target.value})}
+                <input type="email" placeholder="you@example.com" value={formData.email} onChange={(e) => setFormData({...formData,email:e.target.value})}
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 transition-all" required />
               </div>
               <div className="relative">

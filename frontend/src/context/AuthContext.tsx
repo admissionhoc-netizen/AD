@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { apiFetch } from '../hooks/useApi'
 
 export type UserRole = 'admin' | 'faculty' | 'student'
 
@@ -6,9 +7,23 @@ export interface User {
   id: string
   email: string
   name: string
+  full_name?: string
   role: UserRole
   institution?: string
   avatar?: string
+}
+
+interface ApiUser {
+  id: string
+  email: string
+  full_name: string
+  role?: UserRole
+  institution?: string
+}
+
+interface AuthResponse {
+  access_token: string
+  user: ApiUser
 }
 
 interface AuthContextType {
@@ -23,47 +38,43 @@ interface SignupData {
   name: string
   email: string
   password: string
-  role: UserRole
-  institution?: string
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Demo users for immediate testing
-const DEMO_USERS: Record<string, { password: string; user: User }> = {
-  'admin@gcedu.in': {
-    password: 'Admin@1234',
-    user: {
-      id: '1',
-      email: 'admin@gcedu.in',
-      name: 'Dr. Anika Rao',
-      role: 'admin',
-      institution: 'GC Educational Trust',
-      avatar: 'AR',
-    },
-  },
-  'faculty@gcedu.in': {
-    password: 'Faculty@1234',
-    user: {
-      id: '2',
-      email: 'faculty@gcedu.in',
-      name: 'Prof. Vikram Mehta',
-      role: 'faculty',
-      institution: 'GC Educational Trust',
-      avatar: 'VM',
-    },
-  },
-  'student@gcedu.in': {
-    password: 'Student@1234',
-    user: {
-      id: '3',
-      email: 'student@gcedu.in',
-      name: 'Priya Sharma',
-      role: 'student',
-      institution: 'GC Educational Trust',
-      avatar: 'PS',
-    },
-  },
+function initials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+function normalizeUser(apiUser: ApiUser): User {
+  const name = apiUser.full_name || apiUser.email
+  return {
+    id: apiUser.id,
+    email: apiUser.email,
+    name,
+    full_name: apiUser.full_name,
+    role: apiUser.role || 'student',
+    institution: apiUser.institution,
+    avatar: initials(name),
+  }
+}
+
+function getErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) return 'Authentication failed'
+  try {
+    const parsed = JSON.parse(error.message)
+    if (typeof parsed.detail === 'string') return parsed.detail
+    if (Array.isArray(parsed.detail) && parsed.detail[0]?.msg) return parsed.detail[0].msg
+  } catch {
+    // Use the original message below.
+  }
+  return error.message || 'Authentication failed'
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -80,38 +91,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
-    await new Promise((r) => setTimeout(r, 800))
-
-    const demoUser = DEMO_USERS[email.toLowerCase()]
-    if (demoUser && demoUser.password === password) {
-      setUser(demoUser.user)
-      localStorage.setItem('adhoc_user', JSON.stringify(demoUser.user))
-    } else {
-      throw new Error('Invalid credentials')
+    try {
+      const data: AuthResponse = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      })
+      const nextUser = normalizeUser(data.user)
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('adhoc_user', JSON.stringify(nextUser))
+      setUser(nextUser)
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   const signup = async (data: SignupData) => {
     setIsLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
-
-    const newUser: User = {
-      id: Math.random().toString(36).substring(2, 15),
-      email: data.email,
-      name: data.name,
-      role: data.role,
-      institution: data.institution,
-      avatar: data.name.split(' ').map(n => n[0]).join('').toUpperCase(),
+    try {
+      const response: AuthResponse = await apiFetch('/api/auth/signup', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          full_name: data.name,
+        }),
+      })
+      const newUser = normalizeUser(response.user)
+      localStorage.setItem('token', response.access_token)
+      localStorage.setItem('adhoc_user', JSON.stringify(newUser))
+      setUser(newUser)
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    } finally {
+      setIsLoading(false)
     }
-
-    setUser(newUser)
-    localStorage.setItem('adhoc_user', JSON.stringify(newUser))
-    setIsLoading(false)
   }
 
   const logout = () => {
     setUser(null)
+    localStorage.removeItem('token')
     localStorage.removeItem('adhoc_user')
   }
 

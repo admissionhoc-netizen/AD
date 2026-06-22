@@ -227,7 +227,6 @@ class UserSignup(BaseModel):
     password: str = Field(..., min_length=6)
     full_name: str
     phone: Optional[str] = None
-    role: str = "student"
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -261,16 +260,17 @@ class CallInitiate(BaseModel):
 # ─── AUTH ENDPOINTS ───────────────────────────────────────────────────────────
 @app.post("/api/auth/signup", response_model=TokenResponse)
 async def signup(data: UserSignup):
-    existing = supabase.table("users").select("id").eq("email", data.email).execute()
+    email = str(data.email).strip().lower()
+    existing = supabase.table("users").select("id").eq("email", email).execute()
     if existing.data:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user_data = {
-        "email": data.email,
+        "email": email,
         "hashed_password": get_password_hash(data.password),
-        "full_name": data.full_name,
+        "full_name": data.full_name.strip(),
         "phone": data.phone,
-        "role": data.role,
+        "role": "student",
         "created_at": datetime.utcnow().isoformat(),
         "is_active": True,
         "target_colleges": [],
@@ -295,7 +295,8 @@ async def signup(data: UserSignup):
 
 @app.post("/api/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
-    result = supabase.table("users").select("*").eq("email", data.email).execute()
+    email = str(data.email).strip().lower()
+    result = supabase.table("users").select("*").eq("email", email).execute()
     if not result.data:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
