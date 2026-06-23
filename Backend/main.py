@@ -12,6 +12,7 @@ import json
 
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
+from urllib.parse import urlparse
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -35,6 +36,11 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 TWILIO_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE = os.getenv("TWILIO_PHONE_NUMBER")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+print("TWILIO_SID:", bool(TWILIO_SID))
+print("TWILIO_TOKEN:", bool(TWILIO_TOKEN))
+print("TWILIO_PHONE:", bool(TWILIO_PHONE))
+print("BACKEND_URL:", BACKEND_URL)
 
 # ─── AUTH ───────────────────────────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -221,6 +227,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+def validate_backend_url_for_twilio() -> None:
+    if TWILIO_SID and TWILIO_TOKEN and TWILIO_PHONE:
+        if not BACKEND_URL:
+            raise RuntimeError("BACKEND_URL must be set when Twilio is enabled")
+
+        parsed = urlparse(BACKEND_URL)
+        if parsed.scheme.lower() != "https" or not parsed.netloc:
+            raise RuntimeError("BACKEND_URL must be a valid https:// URL when Twilio is enabled")
+
+        hostname = parsed.hostname or ""
+        if hostname in {"localhost", "127.0.0.1"}:
+            raise RuntimeError("BACKEND_URL must not use localhost or 127.0.0.1 when Twilio is enabled")
+
+
+@app.on_event("startup")
+async def startup_event():
+    pass
+    #print("BACKEND_URL:", BACKEND_URL)
+    #if TWILIO_SID and TWILIO_TOKEN and TWILIO_PHONE:
+        #validate_backend_url_for_twilio()
+        #print("Twilio callback_url:", f"{BACKEND_URL.rstrip('/')}/api/calls/webhook")
+
 # ─── PYDANTIC MODELS ─────────────────────────────────────────────────────────
 class UserSignup(BaseModel):
     email: EmailStr
@@ -256,6 +285,10 @@ class KnowledgeUpload(BaseModel):
 class CallInitiate(BaseModel):
     phone_number: Optional[str] = None
     user_id: Optional[str] = None
+    agent_id: Optional[str] = None
+
+class AgentUpdate(BaseModel):
+    system_prompt: str
 
 # ─── AUTH ENDPOINTS ───────────────────────────────────────────────────────────
 @app.post("/api/auth/signup", response_model=TokenResponse)
@@ -412,13 +445,91 @@ async def admin_dashboard(current_user: dict = Depends(get_current_user)):
         .execute()
     )
 
+    from datetime import datetime
+
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+
+    active_calls_today = len([
+        c for c in calls
+        if c.get("created_at", "").startswith(today)
+    ])
+
+    students_count = len([
+        u for u in users
+        if u.get("role") == "student"
+    ])
+
+    faculty_count = len([
+        u for u in users
+        if u.get("role") == "faculty"
+    ])
+
+    active_sessions = len([
+        s for s in sessions
+        if s.get("status") == "active"
+    ])
+
+    knowledge_docs = len(
+        supabase.table("knowledge_base")
+        .select("*")
+        .execute()
+        .data or []
+    )
+
+    activities = (
+        supabase.table("analytics_events")
+        .select("event_type,event_data,created_at")
+        .order("created_at", desc=True)
+        .limit(10)
+        .execute()
+    )
+
+    from datetime import datetime
+
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+
+    active_calls_today = len([
+        c for c in calls
+        if c.get("created_at", "").startswith(today)
+    ])
+
+    students_count = len([
+        u for u in users
+        if u.get("role") == "student"
+    ])
+
+    active_sessions = len([
+        s for s in sessions
+        if s.get("status") == "active"
+    ])
+
+    knowledge_docs = len(
+        supabase.table("knowledge_base")
+        .select("*")
+        .execute()
+        .data or []
+    )
+
+    activities = (
+        supabase.table("analytics_events")
+        .select("*")
+        .order("created_at", desc=True)
+        .limit(10)
+        .execute()
+    )
+
     return {
         "stats": {
             "active_calls_today": active_calls_today,
             "students": students_count,
             "faculty": faculty_count,
             "active_sessions": active_sessions
+            "active_calls_today": active_calls_today,
+            "students": students_count,
+            "faculty": faculty_count,
+            "active_sessions": active_sessions
         },
+        "activities": activities.data or []
         "activities": activities.data or []
     }
 
@@ -560,6 +671,152 @@ async def dashboard_sessions(current_user: dict = Depends(get_current_user)):
 
     return result
 
+@app.get("/api/dashboard/students")
+async def dashboard_students(current_user: dict = Depends(get_current_user)):
+    result = (
+        supabase.table("users")
+        .select("full_name,email,phone")
+        .eq("role", "student")
+        .execute()
+    )
+    return result.data
+
+
+@app.get("/api/dashboard/faculty-list")
+async def dashboard_faculty_list(current_user: dict = Depends(get_current_user)):
+    result = (
+        supabase.table("users")
+        .select("full_name,email,phone")
+        .eq("role", "faculty")
+        .execute()
+    )
+    return result.data
+
+
+@app.get("/api/dashboard/calls")
+async def dashboard_calls(current_user: dict = Depends(get_current_user)):
+    calls = (
+        supabase.table("calls")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+        .data or []
+    )
+
+    users = (
+        supabase.table("users")
+        .select("id,full_name")
+        .execute()
+        .data or []
+    )
+
+    user_map = {
+        u["id"]: u["full_name"]
+        for u in users
+    }
+
+    result = []
+
+    for call in calls:
+        result.append({
+            "username": user_map.get(call.get("user_id"), "Unknown"),
+            "duration": call.get("duration"),
+            "recording": call.get("recording_url"),
+            "phone_number": call.get("phone_number"),
+            "status": call.get("status"),
+            "topic": call.get("topic"),
+            "agent": call.get("agent")
+        })
+
+    return result
+
+
+@app.get("/api/dashboard/sessions")
+async def dashboard_sessions(current_user: dict = Depends(get_current_user)):
+    sessions = (
+        supabase.table("guidance_sessions")
+        .select("*")
+        .order("started_at", desc=True)
+        .execute()
+        .data or []
+    )
+
+    users = (
+        supabase.table("users")
+        .select("id,full_name")
+        .execute()
+        .data or []
+    )
+
+    user_map = {
+        u["id"]: u["full_name"]
+        for u in users
+    }
+
+    result = []
+
+    for session in sessions:
+        result.append({
+            "username": user_map.get(session.get("user_id"), "Unknown"),
+            "session_type": session.get("session_type"),
+            "status": session.get("status"),
+            "summary": session.get("summary"),
+            "recommendations": session.get("recommendations")
+        })
+
+    return result
+
+
+@app.get("/api/agents")
+async def get_agents(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required"
+        )
+
+    result = (
+        supabase.table("ai_agents")
+        .select("""
+            *,
+            voice_settings (
+                provider,
+                voice_id,
+                model
+            )
+        """)
+        .execute()
+    )
+
+    return result.data
+
+@app.put("/api/agents/{agent_id}")
+async def update_agent(
+    agent_id: str,
+    data: AgentUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required"
+        )
+
+    result = (
+        supabase.table("ai_agents")
+        .update({
+            "system_prompt": data.system_prompt
+        })
+        .eq("id", agent_id)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "data": result.data
+    }
+
+
 # ─── SESSION ENDPOINTS ─────────────────────────────────────────────────────
 @app.post("/api/sessions")
 async def create_session(data: SessionCreate, current_user: dict = Depends(get_current_user)):
@@ -625,7 +882,9 @@ async def initiate_call(data: CallInitiate, current_user: dict = Depends(get_cur
         try:
             from twilio.rest import Client
             twilio = Client(TWILIO_SID, TWILIO_TOKEN)
-            callback_url = f"{os.getenv('BACKEND_URL', 'http://localhost:8000')}/api/calls/webhook"
+            callback_url = f"{BACKEND_URL.rstrip('/')}/api/calls/webhook"
+            if not callback_url.lower().startswith("https://"):
+                raise RuntimeError("Twilio callback_url must be HTTPS and publicly accessible")
             twilio_call = twilio.calls.create(
                 to=data.phone_number,
                 from_=TWILIO_PHONE,

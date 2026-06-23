@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { LayoutDashboard, Phone, Settings, BookOpen, FileText, BarChart3, LogOut, Search, Bell, ChevronRight, TrendingUp, Users, GraduationCap, Clock, CheckCircle, Upload, Sparkles, Mic, PhoneCall, Plus, Trash2, Save, Download } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCalls } from '../hooks/useCalls'
+import CallConsolePage from './admin/CallConsolePage'
 import toast from 'react-hot-toast'
 
 function DashboardHome() {
@@ -289,16 +290,129 @@ function DashboardHome() {
     </div>
   )
 }
+
+function TelephonyPage() {
+  const navigate = useNavigate()
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-1">
+          Telephony
+        </h1>
+
+        <p className="text-zinc-400">
+          Manage voice agents and telephony configuration.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div
+          onClick={() => navigate('/admin/voice-agents')}
+          className="glass rounded-2xl p-8 cursor-pointer hover:bg-white/10 transition-all"
+        >
+          <Phone className="text-purple-400 mb-4" size={40} />
+
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Voice Agents
+          </h2>
+
+          <p className="text-zinc-400">
+            Manage AI voice agents, calls and transcripts.
+          </p>
+        </div>
+
+        <div
+          onClick={() => navigate('/admin/studio')}
+          className="glass rounded-2xl p-8 cursor-pointer hover:bg-white/10 transition-all"
+        >
+          <Settings className="text-purple-400 mb-4" size={40} />
+
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Admin Studio
+          </h2>
+
+          <p className="text-zinc-400">
+            Configure prompts, knowledge base and analytics.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function VoiceAgentsPage() {
+  const navigate = useNavigate()
+
+  const [promptText, setPromptText] = useState('')
+  const [showAgentModal, setShowAgentModal] = useState(false)
+
+  const [agents, setAgents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedAgent, setSelectedAgent] = useState(0)
   const [isListening, setIsListening] = useState(false)
-  const agents = [
-    { name: 'Admissions Agent', desc: 'Qualifies leads & books campus tours', status: 'Idle', icon: GraduationCap, phone: '+1 (555) 010-1234' },
-    { name: 'Counselling Agent', desc: 'Career & course counselling, 24/7', status: 'Active', icon: Users, phone: '+1 (555) 010-1235' },
-    { name: 'Onboarding Agent', desc: 'Walks new students through enrolment', status: 'Idle', icon: CheckCircle, phone: '+1 (555) 010-1236' },
-    { name: 'Fee Reminder', desc: 'Polite payment follow-ups in any language', status: 'Active', icon: Phone, phone: '+1 (555) 010-1237' },
-    { name: 'Outreach Agent', desc: 'Outbound campaigns across regions', status: 'Idle', icon: PhoneCall, phone: '+1 (555) 010-1238' },
-  ]
+
+  useEffect(() => {
+    loadAgents()
+  }, [])
+
+  const loadAgents = async () => {
+    try {
+      const token = localStorage.getItem('token')
+
+      const response = await fetch(
+        'http://localhost:8000/api/agents',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      setAgents(data)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  const savePrompt = async () => {
+    try {
+      const token = localStorage.getItem('token')
+
+      const response = await fetch(
+        `http://localhost:8000/api/agents/${agents[selectedAgent].id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            system_prompt: promptText,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      console.log("API Response:", data)
+      console.log("Status:", response.status)
+
+      toast.success('Prompt updated successfully')
+
+      loadAgents()
+
+      setShowAgentModal(false)
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to update prompt')
+    }
+  }
+  
   const transcript = [
     { role: 'agent' as const, text: "Hi! I am calling from ADhoc Institute of Technology. Is this a good time to chat about your B.Tech application?" },
     { role: 'caller' as const, text: "Yes, please go ahead." },
@@ -315,22 +429,59 @@ function VoiceAgentsPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="text-white p-6">
+        Loading agents...
+      </div>
+    )
+  }
+
+  if (agents.length === 0) {
+    return (
+      <div className="text-white p-6">
+        No agents found.
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold text-white mb-1">Voice Agents</h1><p className="text-zinc-400">Talk to your AI workforce. Live calls, transcripts and analytics — all in one place.</p></div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-1">Voice Agents</h1>
+          <p className="text-zinc-400">Talk to your AI workforce. Live calls, transcripts and analytics — all in one place.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate('/admin/call-console')}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-950/30 transition-all hover:bg-purple-500"
+        >
+          <PhoneCall size={16} />
+          Make Calls
+        </button>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 space-y-3">
           <p className="text-xs text-zinc-500 font-medium tracking-wider mb-2">PICK AN AGENT</p>
           {agents.map((agent, i) => (
-            <motion.button key={agent.name} whileHover={{ x: 4 }} onClick={() => setSelectedAgent(i)}
+            <motion.button key={agent.name} whileHover={{ x: 4 }} 
+            onClick={() => {
+              setSelectedAgent(i)
+              setPromptText(agent.system_prompt || '')
+              setShowAgentModal(true)
+            }}
               className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left ${selectedAgent === i ? 'bg-purple-500/20 border border-purple-500/30' : 'glass hover:bg-white/10 border border-white/5'}`}>
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedAgent === i ? 'bg-purple-500/30' : 'bg-white/5'}`}>
-                <agent.icon size={20} className={selectedAgent === i ? 'text-purple-400' : 'text-zinc-400'} />
+                <GraduationCap
+                  size={20}
+                  className={selectedAgent === i ? 'text-purple-400' : 'text-zinc-400'}
+                />
               </div>
               <div className="flex-1">
                 <p className={`font-medium ${selectedAgent === i ? 'text-white' : 'text-zinc-300'}`}>{agent.name}</p>
-                <p className="text-xs text-zinc-500">{agent.desc}</p>
-                <p className="text-xs text-purple-400 mt-1">{agent.phone}</p>
+                <p className="text-xs text-zinc-500">{agent.system_prompt?.substring(0, 60)}...</p>
+                <p className="text-xs text-purple-400 mt-1">{agent.phone_number}</p>
               </div>
             </motion.button>
           ))}
@@ -341,12 +492,12 @@ function VoiceAgentsPage() {
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center"><GraduationCap size={24} className="text-purple-400" /></div>
                 <div>
-                  <h3 className="font-semibold text-white text-lg">{agents[selectedAgent].name}</h3>
-                  <p className="text-sm text-zinc-400">{agents[selectedAgent].desc}</p>
-                  <p className="text-xs text-purple-400 mt-1">{agents[selectedAgent].phone}</p>
+                  <h3 className="font-semibold text-white text-lg">{agents[selectedAgent]?.name}</h3>
+                  <p className="text-sm text-zinc-400">{agents[selectedAgent]?.system_prompt}</p>
+                  <p className="text-xs text-purple-400 mt-1">{agents[selectedAgent]?.phone_number}</p>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs bg-zinc-500/20 text-zinc-400">{agents[selectedAgent].status}</span>
+              <span className="px-3 py-1 rounded-full text-xs bg-zinc-500/20 text-zinc-400">{agents[selectedAgent]?.is_active ? 'Active' : 'Inactive'}</span>
             </div>
             <div className="flex items-center justify-center gap-0.5 h-16 mb-6">
               {[...Array(50)].map((_, i) => (
@@ -381,6 +532,68 @@ function VoiceAgentsPage() {
           </div>
         </div>
       </div>
+      {showAgentModal && (
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center"
+        onClick={() => setShowAgentModal(false)}
+      >
+        <div
+          className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-[900px] max-w-[95vw]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-white">
+              {agents[selectedAgent]?.name}
+            </h2>
+
+            <button
+              onClick={() => setShowAgentModal(false)}
+              className="px-4 py-2 bg-zinc-800 rounded-lg text-white"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-zinc-400 text-sm">
+                Phone Number
+              </label>
+
+              <input
+                type="text"
+                value={agents[selectedAgent]?.phone_number || ''}
+                readOnly
+                className="w-full mt-1 p-3 rounded-xl bg-zinc-800 text-white"
+              />
+            </div>
+
+            <div>
+              <label className="text-zinc-400 text-sm">
+                System Prompt
+              </label>
+
+              <textarea
+                rows={10}
+                value={promptText}
+                onChange={(e) => {
+                console.log("NEW PROMPT:", e.target.value)
+                setPromptText(e.target.value)
+              }}
+              className="w-full mt-1 p-3 rounded-xl bg-zinc-800 text-white"
+              />
+            </div>
+
+            <button
+              onClick={savePrompt}
+              className="px-5 py-3 bg-purple-600 hover:bg-purple-700 rounded-xl text-white"
+            >
+              Save Prompt
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   )
 }
@@ -611,8 +824,7 @@ export default function AdminDashboard() {
   const handleLogout = () => { logout(); toast.success('Signed out successfully'); navigate('/') }
   const navItems = [
     { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/admin/voice-agents', label: 'Voice Agents', icon: Phone },
-    { path: '/admin/studio', label: 'Admin Studio', icon: Settings },
+    { path: '/admin/telephony', label: 'Telephony', icon: Phone },
   ]
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex">
@@ -660,7 +872,9 @@ export default function AdminDashboard() {
         <div className="flex-1 p-6 overflow-auto">
           <Routes>
             <Route path="/" element={<DashboardHome />} />
+            <Route path="/telephony" element={<TelephonyPage />} />
             <Route path="/voice-agents" element={<VoiceAgentsPage />} />
+            <Route path="/call-console" element={<CallConsolePage />} />
             <Route path="/studio" element={<AdminStudioPage />} />
           </Routes>
         </div>
