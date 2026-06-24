@@ -4,6 +4,8 @@ test_twilio.py
 .venv/
 venv/
 
+*.env
+
 __pycache__/
 *.pyc
 

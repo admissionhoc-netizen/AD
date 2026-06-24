@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect  } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, Phone, Settings, BookOpen, FileText, BarChart3, LogOut, Search, Bell, ChevronRight, TrendingUp, Users, GraduationCap, Clock, CheckCircle, Upload, Sparkles, Mic, PhoneCall, Plus, Trash2, Save, Download } from 'lucide-react'
+import { LayoutDashboard, Phone, BookOpen, BarChart3, LogOut, Search, Bell, TrendingUp, Users, GraduationCap, Clock, CheckCircle, Mic, PhoneCall, Download, Settings, Calendar } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCalls } from '../hooks/useCalls'
+import { apiFetch } from '../hooks/useApi'
 import CallConsolePage from './admin/CallConsolePage'
+import MeetingsPage from './MeetingsPage'
 import toast from 'react-hot-toast'
 
 function DashboardHome() {
@@ -96,7 +98,7 @@ function DashboardHome() {
     },
   ]
 
-  const activities = dashboardData?.activities ?? []
+  const activities: any[] = dashboardData?.activities ?? []
 
   return (
     <div className="space-y-6">
@@ -287,56 +289,6 @@ function DashboardHome() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function TelephonyPage() {
-  const navigate = useNavigate()
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-1">
-          Telephony
-        </h1>
-
-        <p className="text-zinc-400">
-          Manage voice agents and telephony configuration.
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div
-          onClick={() => navigate('/admin/voice-agents')}
-          className="glass rounded-2xl p-8 cursor-pointer hover:bg-white/10 transition-all"
-        >
-          <Phone className="text-purple-400 mb-4" size={40} />
-
-          <h2 className="text-xl font-semibold text-white mb-2">
-            Voice Agents
-          </h2>
-
-          <p className="text-zinc-400">
-            Manage AI voice agents, calls and transcripts.
-          </p>
-        </div>
-
-        <div
-          onClick={() => navigate('/admin/studio')}
-          className="glass rounded-2xl p-8 cursor-pointer hover:bg-white/10 transition-all"
-        >
-          <Settings className="text-purple-400 mb-4" size={40} />
-
-          <h2 className="text-xl font-semibold text-white mb-2">
-            Admin Studio
-          </h2>
-
-          <p className="text-zinc-400">
-            Configure prompts, knowledge base and analytics.
-          </p>
-        </div>
-      </div>
     </div>
   )
 }
@@ -598,221 +550,425 @@ function VoiceAgentsPage() {
   )
 }
 
-function AdminStudioPage() {
-  const [activeTab, setActiveTab] = useState<'prompt' | 'knowledge' | 'analytics' | 'telephony'>('prompt')
-  const [promptText, setPromptText] = useState(`You are the Admissions Agent for ADhoc Institute of Technology.
+type KnowledgeItem = {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags?: string[];
+  created_at?: string;
+  updated_at?: string;
+  created_by?: number;
+}
 
-• Be warm, concise, and respectful
-• Always confirm the caller's preferred language
-• Qualify the lead on: stream, score, location, budget
-• If qualified, book a campus tour for this week
-• Never make promises about admission outcomes`)
-  const [saved, setSaved] = useState(false)
-  const [files, setFiles] = useState([
-    { name: 'Programs_Brochure_2026.pdf', size: '2.4 MB', chunks: 128, status: 'Indexed' },
-    { name: 'Fee_Structure.xlsx', size: '180 KB', chunks: 42, status: 'Indexed' },
-    { name: 'Hostel_Policies.docx', size: '640 KB', chunks: 56, status: 'Indexed' },
-    { name: 'FAQ_Admissions.md', size: '24 KB', chunks: 18, status: 'Indexed' },
-    { name: 'Scholarship_Guidelines.pdf', size: '1.1 MB', chunks: 73, status: 'Processing' },
-  ])
-  const { calls: callLogs, total, loading: callLogsLoading } = useCalls(0, 50)
-  const [phoneNumbers] = useState([
-    { number: '+1 (555) 010-1234', agent: 'Admissions Agent', status: 'Active', calls: 1247 },
-    { number: '+1 (555) 010-1235', agent: 'Counselling Agent', status: 'Active', calls: 892 },
-    { number: '+1 (555) 010-1236', agent: 'Onboarding Agent', status: 'Active', calls: 456 },
-    { number: '+1 (555) 010-1237', agent: 'Fee Reminder', status: 'Active', calls: 2103 },
-    { number: '+1 (555) 010-1238', agent: 'Outreach Agent', status: 'Inactive', calls: 0 },
-  ])
-  const fileInputRef = useRef<HTMLInputElement>(null)
+function KnowledgeBasePage() {
+  const [items, setItems] = useState<KnowledgeItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [search, setSearch] = useState('')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    title: '',
+    content: '',
+    category: 'general',
+    tags: ''
+  })
 
-  const handleSavePrompt = () => {
-    setSaved(true)
-    toast.success('Prompt saved and deployed!')
-    setTimeout(() => setSaved(false), 2000)
+  const fetchItems = async () => {
+    setLoading(true)
+    try {
+      const data = await apiFetch('/api/knowledge')
+      setItems(data || [])
+    } catch (error) {
+      console.error('Failed to load knowledge base', error)
+      toast.error('Unable to load knowledge base')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const newFile = { name: file.name, size: `${(file.size / 1024 / 1024).toFixed(1)} MB`, chunks: Math.floor(Math.random() * 100) + 20, status: 'Processing' as const }
-      setFiles([...files, newFile])
-      toast.success(`Uploading ${file.name}...`)
-      setTimeout(() => {
-        setFiles(prev => prev.map(f => f.name === file.name ? { ...f, status: 'Indexed' as const } : f))
-        toast.success(`${file.name} indexed successfully!`)
-      }, 3000)
+  useEffect(() => { fetchItems() }, [])
+
+  const resetForm = () => {
+    setSelectedId(null)
+    setForm({ title: '', content: '', category: 'general', tags: '' })
+  }
+
+  const handleSubmit = async () => {
+    if (!form.title.trim() || !form.content.trim()) {
+      toast.error('Title and content are required')
+      return
     }
+
+    setSaving(true)
+    try {
+      const payload = {
+        title: form.title.trim(),
+        content: form.content.trim(),
+        category: form.category,
+        tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+      }
+
+      if (selectedId) {
+        await apiFetch(`/api/knowledge/${selectedId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        })
+        toast.success('Knowledge item updated')
+      } else {
+        await apiFetch('/api/knowledge', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+        toast.success('Knowledge item created')
+      }
+
+      resetForm()
+      fetchItems()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to save knowledge item')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleEdit = (item: KnowledgeItem) => {
+    setSelectedId(item.id)
+    setForm({
+      title: item.title,
+      content: item.content,
+      category: item.category,
+      tags: item.tags?.join(', ') || ''
+    })
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete this knowledge item?')) {
+      return
+    }
+    try {
+      await apiFetch(`/api/knowledge/${id}`, { method: 'DELETE' })
+      toast.success('Knowledge item deleted')
+      if (selectedId === id) resetForm()
+      fetchItems()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to delete item')
+    }
+  }
+
+  const filteredItems = items.filter((item) => {
+    const query = search.toLowerCase()
+    return (
+      item.title.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query) ||
+      item.content.toLowerCase().includes(query) ||
+      (item.tags || []).join(' ').toLowerCase().includes(query)
+    )
+  })
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-1">Knowledge Base</h1>
+        <p className="text-zinc-400">Create, edit, and manage structured content used by your AI agents.</p>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="glass rounded-2xl p-6 xl:col-span-1">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Knowledge item</h2>
+              <p className="text-sm text-zinc-500">Add or update a knowledge entry.</p>
+            </div>
+            <button type="button" onClick={resetForm} className="text-sm text-purple-400 hover:text-purple-300">Clear</button>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block text-sm text-zinc-400">Title</label>
+            <input
+              value={form.title}
+              onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+
+            <label className="block text-sm text-zinc-400">Category</label>
+            <input
+              value={form.category}
+              onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+
+            <label className="block text-sm text-zinc-400">Tags (comma separated)</label>
+            <input
+              value={form.tags}
+              onChange={(e) => setForm((prev) => ({ ...prev, tags: e.target.value }))}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+
+            <label className="block text-sm text-zinc-400">Content</label>
+            <textarea
+              value={form.content}
+              onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
+              rows={10}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+              className="w-full rounded-2xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {selectedId ? 'Update item' : 'Create item'}
+            </button>
+          </div>
+        </div>
+
+        <div className="xl:col-span-2 space-y-4">
+          <div className="glass rounded-2xl p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Knowledge listings</h2>
+              <p className="text-sm text-zinc-500">Search and edit current knowledge entries.</p>
+            </div>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search knowledge..."
+              className="min-w-[240px] rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+          </div>
+
+          <div className="glass rounded-2xl overflow-hidden">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-white/10 text-zinc-500">
+                  <th className="px-4 py-3">Title</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Tags</th>
+                  <th className="px-4 py-3">Updated</th>
+                  <th className="px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={5} className="px-4 py-6 text-zinc-500">Loading knowledge base...</td></tr>
+                ) : filteredItems.length === 0 ? (
+                  <tr><td colSpan={5} className="px-4 py-6 text-zinc-500">No items found.</td></tr>
+                ) : filteredItems.map((item) => (
+                  <tr key={item.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-4 text-white">{item.title}</td>
+                    <td className="px-4 py-4 text-zinc-400">{item.category}</td>
+                    <td className="px-4 py-4 text-zinc-400">{item.tags?.join(', ')}</td>
+                    <td className="px-4 py-4 text-zinc-400">{item.updated_at ? new Date(item.updated_at).toLocaleDateString() : item.created_at ? new Date(item.created_at).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-4 text-zinc-400 flex gap-2">
+                      <button type="button" onClick={() => handleEdit(item)} className="text-purple-400 hover:text-purple-200">Edit</button>
+                      <button type="button" onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-200">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CallLogsPage() {
+  const { calls, loading } = useCalls(0, 50)
+
+  const totalCalls = calls.length
+  const completedCalls = calls.filter((call) => call.status === 'completed').length
+  const activeCalls = calls.filter((call) => call.status === 'initiated' || call.status === 'ringing' || call.status === 'answered').length
+  const uniqueCallers = new Set(calls.map((call) => call.caller || 'Unknown')).size
+
+  const formatTime = (timestamp: string | null | undefined) => {
+    if (!timestamp) return '—'
+    const diff = Date.now() - new Date(timestamp).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 60) return `${Math.max(mins, 0)}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    return `${Math.floor(hrs / 24)}d ago`
   }
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold text-white mb-1">Admin Studio</h1><p className="text-zinc-400">Train your agents, manage your knowledge base and track performance.</p></div>
-      <div className="flex gap-2">
-        {[{ id: 'prompt' as const, label: 'Prompt Studio', icon: FileText }, { id: 'knowledge' as const, label: 'Knowledge Base', icon: BookOpen }, { id: 'analytics' as const, label: 'Call Logs', icon: BarChart3 }, { id: 'telephony' as const, label: 'Telephony', icon: Phone }].map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white/10 text-white border border-white/20' : 'text-zinc-400 hover:text-white'}`}>
-            <tab.icon size={16} />{tab.label}
-          </button>
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-1">Call Logs</h1>
+        <p className="text-zinc-400">Review real telephony activity tracked from your voice agents.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[{
+          label: 'Total calls', value: totalCalls,
+          icon: Phone,
+          color: 'bg-purple-500/20 text-purple-300'
+        }, {
+          label: 'Completed', value: completedCalls,
+          icon: CheckCircle,
+          color: 'bg-emerald-500/20 text-emerald-300'
+        }, {
+          label: 'Active', value: activeCalls,
+          icon: TrendingUp,
+          color: 'bg-cyan-500/20 text-cyan-300'
+        }, {
+          label: 'Unique callers', value: uniqueCallers,
+          icon: Users,
+          color: 'bg-zinc-500/20 text-zinc-300'
+        }].map((metric) => (
+          <div key={metric.label} className="glass rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <metric.icon size={20} className="text-white/70" />
+              <span className={`text-xs ${metric.color} px-2 py-1 rounded-full`}>{metric.label}</span>
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{metric.value}</div>
+            <div className="text-sm text-zinc-500">{metric.label}</div>
+          </div>
         ))}
       </div>
 
-      {activeTab === 'prompt' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 glass rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3"><Sparkles size={18} className="text-purple-400" /><h3 className="font-semibold text-white">Admissions Agent — System Prompt</h3></div>
-              <button onClick={handleSavePrompt}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${saved ? 'bg-emerald-500 text-white' : 'bg-white text-black hover:bg-zinc-100'}`}>
-                {saved ? <><CheckCircle size={16} />Saved</> : <><Save size={16} />Save & deploy</>}
-              </button>
-            </div>
-            <textarea
-              value={promptText}
-              onChange={(e) => setPromptText(e.target.value)}
-              className="w-full h-96 bg-black/30 rounded-xl p-4 text-sm text-zinc-300 font-mono resize-none focus:outline-none focus:ring-1 focus:ring-purple-500/50 border border-white/10"
-            />
+      <div className="glass rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h4 className="text-sm text-zinc-500 uppercase tracking-[0.2em]">Recent calls</h4>
+            <p className="text-xs text-zinc-500">Most recent agent call activity.</p>
           </div>
-          <div className="space-y-4">
-            <div className="glass rounded-2xl p-5">
-              <h4 className="font-medium text-white mb-4">Voice & tone</h4>
-              <div className="space-y-3">
-                {[{ label: 'Voice', value: 'Aanya · Hindi/English' }, { label: 'Pace', value: 'Natural' }, { label: 'Empathy', value: 'High' }, { label: 'Interruptions', value: 'Allowed' }].map((item) => (
-                  <div key={item.label} className="flex justify-between text-sm"><span className="text-zinc-400">{item.label}</span><span className="text-white">{item.value}</span></div>
-                ))}
-              </div>
-            </div>
-            <div className="glass rounded-2xl p-5">
-              <h4 className="font-medium text-white mb-2">A/B test</h4>
-              <p className="text-sm text-zinc-400 mb-4">Run two versions of this prompt against live traffic and pick the winner.</p>
-              <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm text-white transition-all">+ New variant</button>
-            </div>
-          </div>
+          <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm text-white transition-all"><Download size={16} />Export CSV</button>
         </div>
-      )}
 
-      {activeTab === 'knowledge' && (
-        <div className="space-y-6">
-          <div className="glass rounded-2xl p-12 text-center border border-dashed border-white/20 cursor-pointer hover:bg-white/5 transition-all"
-            onClick={() => fileInputRef.current?.click()}>
-            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} accept=".pdf,.docx,.xlsx,.md,.txt" />
-            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-4"><Upload size={24} className="text-zinc-400" /></div>
-            <h3 className="font-semibold text-white mb-2">Drop documents to train your agents</h3>
-            <p className="text-sm text-zinc-400 mb-4">PDF · DOCX · XLSX · MD · TXT · up to 100 MB per file</p>
-            <button className="px-6 py-2.5 bg-white text-black rounded-full text-sm font-medium hover:bg-zinc-100 transition-all">Upload files</button>
-          </div>
-          <div className="glass rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-              <h4 className="font-medium text-white">Indexed sources ({files.length})</h4>
-              <button className="text-sm text-purple-400 hover:text-purple-300">Re-index all</button>
-            </div>
-            <table className="w-full">
-              <thead><tr className="text-xs text-zinc-500 border-b border-white/10">
-                <th className="text-left px-6 py-3 font-medium">NAME</th>
-                <th className="text-left px-6 py-3 font-medium">SIZE</th>
-                <th className="text-left px-6 py-3 font-medium">CHUNKS</th>
-                <th className="text-left px-6 py-3 font-medium">STATUS</th>
-                <th className="text-left px-6 py-3 font-medium"></th>
-              </tr></thead>
-              <tbody>
-                {files.map((f, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 text-sm text-white flex items-center gap-2"><FileText size={16} className="text-zinc-500" />{f.name}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-400">{f.size}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-400">{f.chunks}</td>
-                    <td className="px-6 py-4"><span className={`text-xs px-2.5 py-1 rounded-full ${f.status === 'Indexed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{f.status}</span></td>
-                    <td className="px-6 py-4"><button className="text-zinc-500 hover:text-red-400 transition-colors"><Trash2 size={16} /></button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-zinc-500">
+                <th className="px-4 py-3">Agent</th>
+                <th className="px-4 py-3">Caller</th>
+                <th className="px-4 py-3">Topic</th>
+                <th className="px-4 py-3">Duration</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={6} className="px-4 py-6 text-zinc-500">Loading call logs...</td></tr>
+              ) : calls.length === 0 ? (
+                <tr><td colSpan={6} className="px-4 py-6 text-zinc-500">No call activity found.</td></tr>
+              ) : calls.map((call) => (
+                <tr key={call.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                  <td className="px-4 py-4 text-white">{call.agent ?? 'Unknown'}</td>
+                  <td className="px-4 py-4 text-zinc-400">{call.caller ?? '—'}</td>
+                  <td className="px-4 py-4 text-zinc-400">{call.topic ?? '—'}</td>
+                  <td className="px-4 py-4 text-white">{Math.floor((call.duration || 0) / 60)}m {(call.duration || 0) % 60}s</td>
+                  <td className="px-4 py-4"><span className={`text-xs px-2 py-1 rounded-full ${call.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{call.status}</span></td>
+                  <td className="px-4 py-4 text-zinc-500">{formatTime(call.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
+    </div>
+  )
+}
 
-      {activeTab === 'analytics' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[{ label: 'Total calls (30d)', value: '42,318', change: '+22%', icon: Phone }, { label: 'Unique callers', value: '18,940', change: '+14%', icon: Users }, { label: 'Conversion', value: '34.6%', change: '+5.2%', icon: TrendingUp }, { label: 'Avg duration', value: '3m 24s', change: '-12s', icon: Clock }].map((s, i) => (
-              <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-4"><s.icon size={20} className="text-purple-400" /><span className="text-xs text-emerald-400 bg-emerald-500/20 px-2 py-1 rounded-full">{s.change}</span></div>
-                <div className="text-3xl font-bold text-white mb-1">{s.value}</div>
-                <div className="text-sm text-zinc-500">{s.label}</div>
-              </motion.div>
-            ))}
-          </div>
-          <div className="glass rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h4 className="text-xs text-zinc-500 font-medium tracking-wider">CALL LOGS ({total})</h4>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm text-white transition-all"><Download size={16} />Export CSV</button>
-            </div>
-            <table className="w-full">
-              <thead><tr className="text-xs text-zinc-500 border-b border-white/10">
-                <th className="text-left px-4 py-3 font-medium">AGENT</th>
-                <th className="text-left px-4 py-3 font-medium">CALLER</th>
-                <th className="text-left px-4 py-3 font-medium">DURATION</th>
-                <th className="text-left px-4 py-3 font-medium">STATUS</th>
-                <th className="text-left px-4 py-3 font-medium">SENTIMENT</th>
-                <th className="text-left px-4 py-3 font-medium">TIME</th>
-              </tr></thead>
-              <tbody>
-                {callLogsLoading ? (
-                  <tr className="border-b border-white/5">
-                    <td colSpan={6} className="px-4 py-6 text-sm text-zinc-500">Loading call logs...</td>
-                  </tr>
-                ) : callLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-4 text-sm text-white">{log.agent ?? log.topic ?? `Call #${log.id}`}</td>
-                    <td className="px-4 py-4 text-sm text-zinc-400">{log.caller ?? '—'}</td>
-                    <td className="px-4 py-4 text-sm text-white">{Math.floor(log.duration / 60)}m {log.duration % 60}s</td>
-                    <td className="px-4 py-4"><span className={`text-xs px-2 py-1 rounded-full ${log.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>{log.status}</span></td>
-                    <td className="px-4 py-4"><span className={`text-xs px-2 py-1 rounded-full ${log.sentiment === 'Positive' || log.sentiment === 'positive' ? 'bg-emerald-500/20 text-emerald-400' : log.sentiment === 'Neutral' || log.sentiment === 'neutral' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>{log.sentiment ?? '—'}</span></td>
-                    <td className="px-4 py-4 text-sm text-zinc-500">{log.created_at ? (() => { const diff = Date.now() - new Date(log.created_at).getTime(); const mins = Math.floor(diff / 60000); if (mins < 60) return `${Math.max(mins, 0)}m ago`; const hrs = Math.floor(mins / 60); if (hrs < 24) return `${hrs}h ago`; return `${Math.floor(hrs / 24)}d ago` })() : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+function TelephonyPage() {
+  const navigate = useNavigate()
+  const [agents, setAgents] = useState<any[]>([])
+  const [calls, setCalls] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
-      {activeTab === 'telephony' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div><h3 className="text-xl font-semibold text-white">Phone Numbers</h3><p className="text-zinc-400 text-sm">Manage Twilio phone numbers assigned to each agent</p></div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-full text-sm transition-all"><Plus size={16} />Buy Number</button>
-          </div>
-          <div className="glass rounded-2xl overflow-hidden">
-            <table className="w-full">
-              <thead><tr className="text-xs text-zinc-500 border-b border-white/10">
-                <th className="text-left px-6 py-3 font-medium">PHONE NUMBER</th>
-                <th className="text-left px-6 py-3 font-medium">ASSIGNED AGENT</th>
-                <th className="text-left px-6 py-3 font-medium">STATUS</th>
-                <th className="text-left px-6 py-3 font-medium">TOTAL CALLS</th>
-                <th className="text-left px-6 py-3 font-medium">ACTIONS</th>
-              </tr></thead>
-              <tbody>
-                {phoneNumbers.map((p, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 text-sm text-white flex items-center gap-2"><Phone size={16} className="text-purple-400" />{p.number}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-300">{p.agent}</td>
-                    <td className="px-6 py-4"><span className={`text-xs px-2.5 py-1 rounded-full ${p.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-500/20 text-zinc-400'}`}>{p.status}</span></td>
-                    <td className="px-6 py-4 text-sm text-white">{p.calls.toLocaleString()}</td>
-                    <td className="px-6 py-4 flex gap-2"><button className="text-zinc-400 hover:text-white"><Settings size={16} /></button><button className="text-zinc-400 hover:text-red-400"><Trash2 size={16} /></button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="glass rounded-2xl p-6">
-            <h4 className="font-medium text-white mb-4">Twilio Integration</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/5 rounded-xl p-4"><p className="text-xs text-zinc-500 mb-1">ACCOUNT SID</p><p className="text-sm text-white font-mono">SKec05e260...3dc58</p></div>
-              <div className="bg-white/5 rounded-xl p-4"><p className="text-xs text-zinc-500 mb-1">AUTH TOKEN</p><p className="text-sm text-white font-mono">••••••••dc58</p></div>
-            </div>
-            <p className="text-sm text-zinc-400 mt-4">Configure your Twilio credentials in the backend .env file to enable real phone calls.</p>
-          </div>
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const [agentsData, callsData] = await Promise.all([
+        apiFetch('/api/agents'),
+        apiFetch('/api/calls')
+      ])
+      setAgents(agentsData || [])
+      setCalls(callsData || [])
+    } catch (error) {
+      console.error('Failed to load telephony data', error)
+      toast.error('Unable to load telephony details')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { fetchData() }, [])
+
+  const totalCalls = calls.length
+  const activeAgents = agents.filter((agent) => agent.is_active).length
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-1">Telephony</h1>
+        <p className="text-zinc-400">Monitor voice agents, number assignments, and call volume in real time.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass rounded-2xl p-5">
+          <p className="text-sm text-zinc-500">Voice agents</p>
+          <p className="text-3xl font-semibold text-white mt-2">{agents.length}</p>
         </div>
-      )}
+        <div className="glass rounded-2xl p-5">
+          <p className="text-sm text-zinc-500">Active agents</p>
+          <p className="text-3xl font-semibold text-white mt-2">{activeAgents}</p>
+        </div>
+        <div className="glass rounded-2xl p-5">
+          <p className="text-sm text-zinc-500">Total calls</p>
+          <p className="text-3xl font-semibold text-white mt-2">{totalCalls}</p>
+        </div>
+      </div>
+
+      <div className="glass rounded-2xl p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Agent roster</h2>
+            <p className="text-sm text-zinc-500">Connected AI agents and assigned voice settings.</p>
+          </div>
+          <button onClick={() => navigate('/admin/voice-agents')} className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-500 transition-all">
+            <PhoneCall size={16} /> Manage agents
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-zinc-500">
+                <th className="px-4 py-3">Agent</th>
+                <th className="px-4 py-3">Phone</th>
+                <th className="px-4 py-3">Voice</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Call count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={5} className="px-4 py-6 text-zinc-500">Loading telephony data...</td></tr>
+              ) : agents.length === 0 ? (
+                <tr><td colSpan={5} className="px-4 py-6 text-zinc-500">No agents configured.</td></tr>
+              ) : agents.map((agent) => {
+                const count = calls.filter((call) => call.agent === agent.name).length
+                const voice = agent.voice_settings?.[0]
+                return (
+                  <tr key={agent.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-4 text-white">{agent.name}</td>
+                    <td className="px-4 py-4 text-zinc-400">{agent.phone_number ?? '—'}</td>
+                    <td className="px-4 py-4 text-zinc-400">{voice ? `${voice.provider} / ${voice.voice_id || voice.model}` : 'Unconfigured'}</td>
+                    <td className="px-4 py-4"><span className={`text-xs px-2 py-1 rounded-full ${agent.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-500/20 text-zinc-400'}`}>{agent.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td className="px-4 py-4 text-white">{count}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
@@ -824,7 +980,10 @@ export default function AdminDashboard() {
   const handleLogout = () => { logout(); toast.success('Signed out successfully'); navigate('/') }
   const navItems = [
     { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/admin/knowledge', label: 'Knowledge Base', icon: BookOpen },
+    { path: '/admin/call-logs', label: 'Call Logs', icon: BarChart3 },
     { path: '/admin/telephony', label: 'Telephony', icon: Phone },
+    { path: '/admin/meetings', label: 'Meetings', icon: Calendar },
   ]
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex">
@@ -872,10 +1031,12 @@ export default function AdminDashboard() {
         <div className="flex-1 p-6 overflow-auto">
           <Routes>
             <Route path="/" element={<DashboardHome />} />
+            <Route path="/knowledge" element={<KnowledgeBasePage />} />
+            <Route path="/call-logs" element={<CallLogsPage />} />
             <Route path="/telephony" element={<TelephonyPage />} />
             <Route path="/voice-agents" element={<VoiceAgentsPage />} />
             <Route path="/call-console" element={<CallConsolePage />} />
-            <Route path="/studio" element={<AdminStudioPage />} />
+            <Route path="/meetings/*" element={<MeetingsPage />} />
           </Routes>
         </div>
       </main>

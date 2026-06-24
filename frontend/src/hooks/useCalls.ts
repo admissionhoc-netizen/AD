@@ -23,11 +23,9 @@ export function useCalls(skip = 0, limit = 50, status?: string) {
 
   const fetchCalls = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
-    if (status) params.append('status', status);
-    const data = await apiFetch(`/api/calls/logs?${params}`);
-    setCalls(data.calls);
-    setTotal(data.total);
+    const data = await apiFetch('/api/calls');
+    setCalls(data || []);
+    setTotal((data || []).length);
     setLoading(false);
   }, [skip, limit, status]);
 
