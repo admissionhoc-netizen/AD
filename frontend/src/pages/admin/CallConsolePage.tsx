@@ -84,7 +84,7 @@ export default function CallConsolePage() {
         setLoadError('')
 
         const token = localStorage.getItem('token')
-        const response = await fetch('http://localhost:8000/api/agents', {
+        const response = await fetch('https://ad-1-ja69.onrender.com/api/agents', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -159,7 +159,7 @@ export default function CallConsolePage() {
 
       console.log('Initiate call payload:', payload)
 
-      const response = await fetch('http://localhost:8000/api/calls/initiate', {
+      const response = await fetch('https://ad-1-ja69.onrender.com/api/calls/initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

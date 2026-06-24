@@ -24,7 +24,7 @@ function DashboardHome() {
       const token = localStorage.getItem('token')
 
       const response = await fetch(
-        'http://localhost:8000/api/dashboard/admin',
+        'https://ad-1-ja69.onrender.com/api/dashboard/admin',
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -47,7 +47,7 @@ function DashboardHome() {
       const token = localStorage.getItem('token')
 
       const response = await fetch(
-        `http://localhost:8000/api/dashboard/${type}`,
+        `https://ad-1-ja69.onrender.com/api/dashboard/${type}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -313,7 +313,7 @@ function VoiceAgentsPage() {
       const token = localStorage.getItem('token')
 
       const response = await fetch(
-        'http://localhost:8000/api/agents',
+        'https://ad-1-ja69.onrender.com/api/agents',
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -335,7 +335,7 @@ function VoiceAgentsPage() {
       const token = localStorage.getItem('token')
 
       const response = await fetch(
-        `http://localhost:8000/api/agents/${agents[selectedAgent].id}`,
+        `https://ad-1-ja69.onrender.com/api/agents/${agents[selectedAgent].id}`,
         {
           method: 'PUT',
           headers: {

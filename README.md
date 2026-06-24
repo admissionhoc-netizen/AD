@@ -8,8 +8,8 @@ cd adhoc-ai
 docker-compose up --build
 ```
 - Frontend: http://localhost:5173
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
+- Backend API: https://ad-1-ja69.onrender.com
+- API Docs: https://ad-1-ja69.onrender.com/docs
 
 ### Option 2: Local Development
 

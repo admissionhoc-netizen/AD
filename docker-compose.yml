@@ -8,7 +8,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=https://ad-1-ja69.onrender.com
     depends_on:
       - backend
     volumes:
