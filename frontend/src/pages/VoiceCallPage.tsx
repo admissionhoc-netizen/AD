@@ -471,102 +471,107 @@ export default function VoiceCallPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center p-6 relative">
-      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
+    <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6 relative">
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-zinc-400 hover:text-white transition-all font-mono text-xs uppercase tracking-wider">
         <span>← Back home</span>
       </Link>
 
-      <div className="absolute top-6 right-6 flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center">
+      <div className="absolute top-6 right-6 flex items-center gap-2 select-none">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
           <span className="text-white font-bold text-sm">A</span>
         </div>
-        <span className="font-bold text-white">ADhoc<span className="text-purple-400">.ai</span></span>
+        <span className="font-extrabold text-white text-sm">ADhoc<span className="text-gradient-neon font-black">.ai</span></span>
       </div>
 
       <AnimatePresence mode="wait">
         {callState === 'idle' && (
-          <motion.div key="idle" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-            className="text-center flex flex-col items-center justify-center">
-            <h1 className="text-4xl font-bold mb-4 text-white">Try our AI Voice Agent</h1>
-            <p className="text-zinc-400 mb-8 max-w-md">
+          <motion.div key="idle" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+            className="text-center flex flex-col items-center justify-center max-w-md glass-panel p-8 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-2xl">
+            <h1 className="text-3xl font-extrabold mb-4 text-white tracking-tight">Try our AI Voice Agent</h1>
+            <p className="text-zinc-400 mb-8 leading-relaxed text-sm">
               Experience a real-time voice conversation with our Adhoc Agent. 
               Ask about colleges, courses, careers, and admissions.
             </p>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={startCall}
-              className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center shadow-2xl shadow-purple-500/40 mx-auto hover:shadow-purple-500/60 transition-shadow">
+            <motion.button 
+              whileHover={{ scale: 1.05, y: -2 }} 
+              whileTap={{ scale: 0.95 }} 
+              onClick={startCall}
+              className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-purple-500 flex items-center justify-center shadow-2xl shadow-purple-500/30 mx-auto hover:shadow-purple-500/50 transition-all border border-white/10 hover:border-purple-300/30 glow-purple"
+            >
               <Phone size={32} className="text-white" />
             </motion.button>
-            <p className="mt-4 text-zinc-500 text-sm">Tap to call</p>
+            <p className="mt-4 text-zinc-500 font-mono text-xs tracking-widest uppercase">Tap to call</p>
           </motion.div>
         )}
 
         {callState === 'connecting' && (
-          <motion.div key="connecting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
-            <div className="relative w-32 h-32 mx-auto mb-6">
+          <motion.div key="connecting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+            className="text-center glass-panel p-8 rounded-3xl border border-white/10 shadow-2xl max-w-sm w-full">
+            <div className="relative w-28 h-28 mx-auto mb-6">
               {[...Array(3)].map((_, i) => (
                 <motion.div key={i} className="absolute inset-0 rounded-full border-2 border-purple-500/30"
-                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }} 
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }} 
                   transition={{ duration: 2, delay: i * 0.6, repeat: Infinity }} />
               ))}
-              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center">
-                <Phone size={32} className="text-white animate-pulse" />
+              <div className="absolute inset-3 rounded-full bg-gradient-to-br from-purple-600 via-pink-500 to-purple-500 flex items-center justify-center shadow-lg border border-white/10">
+                <Phone size={28} className="text-white animate-pulse" />
               </div>
             </div>
-            <h2 className="text-2xl font-bold mb-2 text-white">Connecting...</h2>
-            <p className="text-zinc-400">Adhoc AI Agent</p>
+            <h2 className="text-xl font-bold mb-1 text-white">Connecting...</h2>
+            <p className="text-xs text-zinc-500 font-mono tracking-wider">ADHOC AI AGENT</p>
           </motion.div>
         )}
 
         {(callState === 'active' || callState === 'ended') && (
           <motion.div key="active" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-2xl">
-            <div className="glass rounded-2xl p-6 mb-4">
-              <div className="flex items-center justify-between mb-4">
+            <div className="glass-panel rounded-2xl p-6 mb-4 border border-white/10 shadow-2xl backdrop-blur-2xl">
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">AI</span>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center shadow-md">
+                    <span className="text-white font-extrabold text-sm">AI</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Adhoc AI</h3>
-                    <p className="text-sm text-zinc-400">AI Career Counselor</p>
+                    <h3 className="font-semibold text-white text-sm">Adhoc AI</h3>
+                    <p className="text-xs text-zinc-500 font-mono">AI Career Counselor</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-sm">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     {formatTime(timer)}
                   </div>
-                  <button onClick={endCall} className="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center text-red-400 transition-colors">
-                    <PhoneOff size={18} />
+                  <button onClick={endCall} className="w-10 h-10 rounded-full bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center text-red-400 border border-red-500/20 transition-all">
+                    <PhoneOff size={16} />
                   </button>
                 </div>
               </div>
 
-              {/* FIX: Better status indicator */}
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <span className={`text-sm font-medium animate-pulse ${getStatusColor()}`}>
+              {/* Better status indicator */}
+              <div className="flex items-center justify-center gap-2 mb-4 h-6">
+                <span className={`text-xs font-mono uppercase tracking-widest font-semibold animate-pulse ${getStatusColor()}`}>
                   {getStatusText()}
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-0.5 h-12">
+              <div className="flex items-center justify-center gap-1 h-16 bg-white/[0.01] border border-white/5 rounded-2xl px-4 py-2">
                 {[...Array(40)].map((_, i) => (
-                  <motion.div key={i} className="w-1 bg-gradient-to-t from-purple-500 to-cyan-400 rounded-full"
+                  <motion.div key={i} className="w-1 bg-gradient-to-t from-purple-500 via-pink-500 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(139,92,246,0.3)]"
                     animate={{ 
                       height: callState === 'active' && (isUserSpeaking || isAgentSpeaking) 
-                        ? [4, 8 + Math.random() * 20, 4] 
-                        : 4 
+                        ? [8, 12 + Math.random() * 28, 8] 
+                        : 8 
                     }}
-                    transition={{ duration: 0.5, delay: i * 0.02, repeat: Infinity }} />
+                    transition={{ duration: 0.4, delay: i * 0.015, repeat: Infinity }} />
                 ))}
               </div>
             </div>
 
-            <div className="glass rounded-2xl p-6 mb-4 h-80 overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xs text-zinc-500 font-medium tracking-wider">LIVE TRANSCRIPT</h4>
-                <span className="flex items-center gap-2 text-xs text-emerald-400">
+            <div className="glass-panel rounded-2xl p-6 mb-4 h-80 overflow-y-auto border border-white/10 shadow-xl scrollbar-thin">
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
+                <h4 className="text-[10px] text-zinc-500 font-mono font-bold tracking-widest">LIVE TRANSCRIPT</h4>
+                <span className="flex items-center gap-2 text-[10px] font-mono font-semibold text-emerald-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {callState === 'active' ? 'Live' : 'Call Ended'}
+                  {callState === 'active' ? 'LIVE CONNECTED' : 'CALL ENDED'}
                 </span>
               </div>
 
@@ -574,31 +579,31 @@ export default function VoiceCallPage() {
                 {messages.length === 0 && callState === 'active' && (
                   <div className="text-center py-8">
                     <p className="text-zinc-500 text-sm">Say something to start the conversation...</p>
-                    <p className="text-zinc-600 text-xs mt-2">Try: "What colleges are good for Computer Science?"</p>
+                    <p className="text-zinc-600 text-xs mt-2 font-mono">Try: "What colleges are good for Computer Science?"</p>
                   </div>
                 )}
 
                 {messages.map((msg, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                     className={`flex ${msg.role === 'caller' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                    <div className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-lg ${
                       msg.role === 'caller' 
-                        ? 'bg-purple-600/20 text-white rounded-br-md' 
-                        : 'bg-white/5 text-zinc-300 rounded-bl-md'
+                        ? 'bg-gradient-to-r from-purple-600 via-pink-500 to-purple-500 text-white rounded-tr-none border border-white/10' 
+                        : 'glass-panel text-zinc-200 rounded-tl-none border border-white/10'
                     }`}>
-                      <p className="text-xs text-purple-400 mb-1">{msg.role === 'agent' ? 'AI Agent' : 'You'}</p>
-                      <p className="text-sm">{msg.text}</p>
+                      <p className="text-[9px] font-mono font-bold tracking-wider text-purple-400 mb-1">{msg.role === 'agent' ? 'AI AGENT' : 'YOU'}</p>
+                      <p className="text-sm leading-relaxed">{msg.text}</p>
                     </div>
                   </motion.div>
                 ))}
 
                 {callState === 'active' && messages.length > 0 && messages[messages.length - 1].role === 'caller' && !isAgentSpeaking && (
                   <div className="flex justify-start">
-                    <div className="bg-white/5 px-4 py-3 rounded-2xl rounded-bl-md">
-                      <div className="flex gap-1">
-                        <motion.div className="w-2 h-2 rounded-full bg-purple-400" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity }} />
-                        <motion.div className="w-2 h-2 rounded-full bg-purple-400" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, delay: 0.2, repeat: Infinity }} />
-                        <motion.div className="w-2 h-2 rounded-full bg-purple-400" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, delay: 0.4, repeat: Infinity }} />
+                    <div className="glass-panel px-4 py-3 rounded-2xl rounded-tl-none border border-white/10">
+                      <div className="flex items-center gap-1.5 h-4">
+                        <motion.div className="w-2.5 h-2.5 rounded-full bg-purple-400" animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }} transition={{ duration: 1, repeat: Infinity }} />
+                        <motion.div className="w-2.5 h-2.5 rounded-full bg-purple-400" animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }} transition={{ duration: 1, delay: 0.2, repeat: Infinity }} />
+                        <motion.div className="w-2.5 h-2.5 rounded-full bg-purple-400" animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }} transition={{ duration: 1, delay: 0.4, repeat: Infinity }} />
                       </div>
                     </div>
                   </div>
@@ -609,25 +614,27 @@ export default function VoiceCallPage() {
             {callState === 'active' && (
               <div className="flex justify-center gap-4">
                 <button onClick={handleMute} 
-                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
-                    isMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white hover:bg-white/20'
+                  className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all ${
+                    isMuted 
+                      ? 'bg-red-500/20 border-red-500/30 text-red-400 shadow-lg shadow-red-500/10 animate-pulse' 
+                      : 'glass-panel border-white/15 text-white hover:bg-white/10'
                   }`}>
-                  {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
+                  {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
                 </button>
                 <button onClick={endCall}
-                  className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all shadow-lg shadow-red-500/30">
-                  <PhoneOff size={22} />
+                  className="w-14 h-14 rounded-full bg-gradient-to-r from-red-600 to-pink-600 text-white flex items-center justify-center transition-all shadow-lg shadow-red-500/20 border border-white/10 hover:border-red-300/30 hover:scale-105">
+                  <PhoneOff size={20} />
                 </button>
-                <button className="w-14 h-14 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-all">
-                  <Volume2 size={22} />
+                <button className="w-14 h-14 rounded-full glass-panel border border-white/15 text-white hover:bg-white/10 flex items-center justify-center transition-all">
+                  <Volume2 size={20} />
                 </button>
               </div>
             )}
 
             {callState === 'ended' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-                <p className="text-zinc-400 mb-4">Call ended • {formatTime(timer)}</p>
-                <button onClick={startCall} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-full font-medium transition-all">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center p-4">
+                <p className="text-zinc-500 font-mono text-xs uppercase tracking-wider mb-4">Call ended • {formatTime(timer)}</p>
+                <button onClick={startCall} className="px-8 py-3.5 bg-gradient-to-r from-purple-600 via-pink-500 to-purple-500 text-white rounded-full font-medium transition-all shadow-lg shadow-purple-500/20 border border-white/10 hover:border-purple-300/30 glow-purple">
                   Call Again
                 </button>
               </motion.div>

@@ -74,15 +74,19 @@ function CareerAssistant() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-white mb-1">Career Assistant</h1>
+      <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Career Assistant</h1>
       <p className="text-zinc-400">Get personalized career guidance from our AI.</p>
-      <div className="glass rounded-2xl p-6 h-[500px] flex flex-col">
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+      <div className="glass-panel rounded-2xl p-6 h-[500px] flex flex-col border border-white/10 shadow-2xl">
+        <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] px-4 py-3 rounded-2xl ${msg.role === 'user' ? 'bg-purple-600/20 text-white rounded-br-md' : 'bg-white/5 text-zinc-300 rounded-bl-md'}`}>
-                <p className="text-xs text-purple-400 mb-1">{msg.role === 'agent' ? 'AI Assistant' : 'You'}</p>
-                <p className="text-sm">{msg.text}</p>
+              <div className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-lg transition-all ${
+                msg.role === 'user' 
+                  ? 'bg-gradient-to-r from-purple-600 via-pink-500 to-purple-500 text-white rounded-tr-none border border-white/10' 
+                  : 'glass-panel text-zinc-200 rounded-tl-none border border-white/10'
+              }`}>
+                <p className="text-[10px] font-mono font-bold tracking-wider text-purple-400 mb-1.5">{msg.role === 'agent' ? 'AI ASSISTANT' : 'YOU'}</p>
+                <p className="text-sm leading-relaxed">{msg.text}</p>
               </div>
             </div>
           ))}
@@ -90,8 +94,8 @@ function CareerAssistant() {
         <div className="flex gap-2">
           <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Ask about careers, courses, colleges..."
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50" />
-          <button onClick={sendMessage} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-medium transition-all">Send</button>
+            className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl py-3 px-4 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 hover:border-white/20 transition-all" />
+          <button onClick={sendMessage} className="px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-500 to-purple-500 text-white rounded-xl font-medium transition-all shadow-md border border-white/10 hover:border-purple-300/30 glow-purple">Send</button>
         </div>
       </div>
     </div>
@@ -252,49 +256,55 @@ export default function StudentDashboard() {
     { path: '/student/roadmap', label: 'Roadmap', icon: Map },
   ]
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex">
-      <aside className="w-64 border-r border-white/10 flex flex-col">
+    <div className="min-h-screen bg-transparent flex">
+      <aside className="w-64 glass-panel border-r border-white/10 flex flex-col backdrop-blur-2xl">
         <div className="p-6">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center"><span className="text-white font-bold text-sm">A</span></div>
-            <span className="font-bold text-white">ADhoc<span className="text-purple-400">.ai</span></span>
+          <Link to="/" className="flex items-center gap-2 group w-fit">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <span className="text-white font-bold text-sm">A</span>
+            </div>
+            <span className="font-extrabold text-lg text-white">ADhoc<span className="text-gradient-neon font-black">.ai</span></span>
           </Link>
         </div>
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => (
             <Link key={item.path} to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${location.pathname===item.path?'bg-white/10 text-white':'text-zinc-400 hover:text-white hover:bg-white/5'}`}>
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                location.pathname === item.path 
+                  ? 'bg-gradient-to-r from-purple-500/15 to-cyan-500/5 border border-purple-500/25 text-white shadow-lg shadow-purple-500/5' 
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}>
               <item.icon size={18} />{item.label}
             </Link>
           ))}
         </nav>
         <div className="p-4 border-t border-white/10">
-          <div className="glass rounded-xl p-4 mb-4">
-            <p className="text-xs text-zinc-500 mb-1">SIGNED IN</p>
-            <p className="text-sm text-white truncate">{user?.email}</p>
+          <div className="glass-panel rounded-xl p-4 mb-4 border border-white/5 bg-white/[0.01]">
+            <p className="text-[10px] text-zinc-500 mb-1 font-mono tracking-wider">SIGNED IN</p>
+            <p className="text-sm text-white truncate font-medium">{user?.email}</p>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-400 hover:text-white transition-colors w-full">
+          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all w-full text-left">
             <LogOut size={18} />Sign out
           </button>
         </div>
       </aside>
       <main className="flex-1 flex flex-col">
-        <header className="h-16 border-b border-white/10 flex items-center justify-between px-6">
+        <header className="h-16 glass-panel border-b border-white/10 flex items-center justify-between px-6">
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input type="text" placeholder="Search courses, scholarships..."
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50" />
+                className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 hover:border-white/20 transition-all" />
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all relative">
-              <Bell size={18} /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500" />
+            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white border border-white/5 transition-all relative">
+              <Bell size={18} /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">{user?.avatar || 'S'}</div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-400 flex items-center justify-center text-white font-extrabold text-sm shadow-md">{user?.avatar || 'S'}</div>
           </div>
         </header>
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto bg-transparent">
           <Routes>
             <Route path="/" element={<StudentHome />} />
             <Route path="/career" element={<CareerAssistant />} />

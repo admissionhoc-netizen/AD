@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
+import GlobalBackground from './components/GlobalBackground'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import AdminDashboard from './pages/AdminDashboard'
@@ -12,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 function App() {
   return (
     <AuthProvider>
+      <GlobalBackground />
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<LandingPage />} />

@@ -18,15 +18,15 @@ export default function FAQSection() {
       <div className="max-w-3xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
           <p className="text-purple-400 text-sm font-medium tracking-widest mb-4">FAQ</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Questions, <span className="text-gradient">answered.</span></h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Questions, <span className="text-gradient-neon">answered.</span></h2>
         </motion.div>
         <div className="space-y-4">
           {faqs.map((faq, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
-              <div className={`glass rounded-2xl overflow-hidden transition-all ${openIndex === i ? 'border-purple-500/30' : 'border-white/10'}`}>
+              <div className={`glass-panel rounded-2xl overflow-hidden transition-all duration-300 ${openIndex === i ? 'border-purple-500/40 bg-purple-950/10' : ''}`}>
                 <button onClick={() => setOpenIndex(openIndex === i ? null : i)} className="w-full flex items-center justify-between p-6 text-left">
                   <span className="font-medium text-white">{faq.q}</span>
-                  <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">{openIndex === i ? <X size={16} /> : <Plus size={16} />}</span>
+                  <span className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-transform hover:scale-105">{openIndex === i ? <X size={16} className="text-purple-400" /> : <Plus size={16} />}</span>
                 </button>
                 <AnimatePresence>
                   {openIndex === i && (

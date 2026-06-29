@@ -43,16 +43,16 @@ export default function Navbar() {
       <div
         className={`w-full max-w-6xl transition-all duration-500 ${
           scrolled
-            ? 'glass-strong rounded-2xl shadow-2xl'
-            : 'bg-transparent'
+            ? 'glass-panel rounded-2xl shadow-2xl border border-white/10'
+            : 'bg-transparent border border-transparent'
         }`}
       >
         <div className="flex items-center justify-between px-6 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
               <span className="text-white font-bold text-sm">A</span>
             </div>
-            <span className="font-bold text-lg text-white">ADhoc<span className="text-purple-400">.ai</span></span>
+            <span className="font-extrabold text-lg text-white">ADhoc<span className="text-gradient-neon font-black">.ai</span></span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
@@ -60,7 +60,7 @@ export default function Navbar() {
               <button
                 key={link.label}
                 onClick={() => scrollTo(link.href)}
-                className="px-4 py-2 text-sm text-zinc-300 hover:text-white rounded-full hover:bg-white/10 transition-all"
+                className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-300 hover:text-white rounded-full hover:bg-white/5 border border-transparent hover:border-white/5 transition-all"
               >
                 {link.label}
               </button>
@@ -71,7 +71,7 @@ export default function Navbar() {
             {user ? (
               <button
                 onClick={() => navigate(`/${user.role}`)}
-                className="px-5 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/10"
+                className="px-5 py-2 text-sm bg-white/5 hover:bg-white/10 text-white rounded-full transition-all border border-white/10"
               >
                 Dashboard
               </button>
@@ -80,7 +80,7 @@ export default function Navbar() {
                 <Link to="/auth" className="px-5 py-2 text-sm text-zinc-300 hover:text-white transition-colors">
                   Log in
                 </Link>
-                <Link to="/auth" className="px-5 py-2 text-sm bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-full transition-all shadow-lg shadow-purple-500/25">
+                <Link to="/auth" className="px-5 py-2 text-sm bg-gradient-to-r from-purple-600 via-pink-500 to-purple-500 hover:from-purple-500 hover:via-pink-400 hover:to-purple-400 text-white rounded-full transition-all shadow-lg shadow-purple-500/20 border border-white/10 hover:border-purple-300/30 glow-purple">
                   Sign up
                 </Link>
               </>

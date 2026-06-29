@@ -19,18 +19,18 @@ export default function PlatformBento() {
       <div className="max-w-6xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
           <p className="text-purple-400 text-sm font-medium tracking-widest mb-4">PLATFORM</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">One <span className="text-gradient">operating system</span> for the entire institution.</h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">One <span className="text-gradient-neon">operating system</span> for the entire institution.</h2>
           <p className="text-zinc-400">Modular by design. Every capability is a building block of your AI workforce.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[180px]">
           {features.map((feature, i) => (
             <motion.div key={feature.title}
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className={`glass rounded-3xl p-6 flex flex-col justify-between hover:bg-white/10 transition-all cursor-pointer group ${
+              whileHover={{ scale: 1.015, y: -4 }}
+              className={`glass-panel rounded-3xl p-6 flex flex-col justify-between hover:bg-white/5 transition-all duration-300 border border-white/10 hover:border-purple-500/30 cursor-pointer group relative overflow-hidden ${
                 feature.size === 'large' ? 'md:col-span-2 md:row-span-2' : 'md:row-span-1'
               }`}>
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/20 transition-all">
                 <feature.icon size={20} className="text-purple-400" />
               </div>
               <div>

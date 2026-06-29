@@ -14,12 +14,12 @@ export default function Testimonials() {
       <div className="max-w-6xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
           <p className="text-purple-400 text-sm font-medium tracking-widest mb-4">VOICES</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Trusted by the people who run <span className="text-gradient">education.</span></h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Trusted by the people who run <span className="text-gradient-neon">education.</span></h2>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
             <motion.div key={t.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -5 }} className="glass rounded-3xl p-6 hover:bg-white/10 transition-all">
+              whileHover={{ y: -4 }} className="glass-panel rounded-3xl p-6 hover:bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all duration-300">
               <p className="text-zinc-300 mb-6 leading-relaxed">"{t.quote}"</p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">{t.initials}</div>

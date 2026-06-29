@@ -263,49 +263,55 @@ export default function FacultyDashboard() {
     { path: '/faculty/analytics', label: 'Analytics', icon: BarChart3 },
   ]
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex">
-      <aside className="w-64 border-r border-white/10 flex flex-col">
+    <div className="min-h-screen bg-transparent flex">
+      <aside className="w-64 glass-panel border-r border-white/10 flex flex-col backdrop-blur-2xl">
         <div className="p-6">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center"><span className="text-white font-bold text-sm">A</span></div>
-            <span className="font-bold text-white">ADhoc<span className="text-purple-400">.ai</span></span>
+          <Link to="/" className="flex items-center gap-2 group w-fit">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <span className="text-white font-bold text-sm">A</span>
+            </div>
+            <span className="font-extrabold text-lg text-white">ADhoc<span className="text-gradient-neon font-black">.ai</span></span>
           </Link>
         </div>
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => (
             <Link key={item.path} to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${location.pathname===item.path?'bg-white/10 text-white':'text-zinc-400 hover:text-white hover:bg-white/5'}`}>
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                location.pathname === item.path 
+                  ? 'bg-gradient-to-r from-purple-500/15 to-cyan-500/5 border border-purple-500/25 text-white shadow-lg shadow-purple-500/5' 
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}>
               <item.icon size={18} />{item.label}
             </Link>
           ))}
         </nav>
         <div className="p-4 border-t border-white/10">
-          <div className="glass rounded-xl p-4 mb-4">
-            <p className="text-xs text-zinc-500 mb-1">SIGNED IN</p>
-            <p className="text-sm text-white truncate">{user?.email}</p>
+          <div className="glass-panel rounded-xl p-4 mb-4 border border-white/5 bg-white/[0.01]">
+            <p className="text-[10px] text-zinc-500 mb-1 font-mono tracking-wider">SIGNED IN</p>
+            <p className="text-sm text-white truncate font-medium">{user?.email}</p>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-400 hover:text-white transition-colors w-full">
+          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all w-full text-left">
             <LogOut size={18} />Sign out
           </button>
         </div>
       </aside>
       <main className="flex-1 flex flex-col">
-        <header className="h-16 border-b border-white/10 flex items-center justify-between px-6">
+        <header className="h-16 glass-panel border-b border-white/10 flex items-center justify-between px-6">
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input type="text" placeholder="Search classes, students..."
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50" />
+                className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 hover:border-white/20 transition-all" />
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all relative">
-              <Bell size={18} /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-cyan-500" />
+            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white border border-white/5 transition-all relative">
+              <Bell size={18} /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
             </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-400 flex items-center justify-center text-white font-bold text-sm">{user?.avatar || 'F'}</div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-400 flex items-center justify-center text-white font-extrabold text-sm shadow-md">{user?.avatar || 'F'}</div>
           </div>
         </header>
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto bg-transparent">
           <Routes>
             <Route path="/" element={<FacultyHome />} />
             <Route path="/classes" element={<ClassesPage />} />

@@ -27,7 +27,7 @@ export default function AgentsShowcase() {
       <div className="max-w-6xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
           <p className="text-purple-400 text-sm font-medium tracking-widest mb-4">15 AI VOICE AGENTS</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">An entire admissions <span className="text-gradient">department,</span> automated.</h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">An entire admissions <span className="text-gradient-neon">department,</span> automated.</h2>
           <p className="text-zinc-400">Scroll to meet the team. Each agent owns one responsibility and speaks fluently across languages.</p>
         </motion.div>
         <div className="relative h-[500px] flex items-center justify-center">
@@ -42,10 +42,10 @@ export default function AgentsShowcase() {
                   onClick={() => setActiveIndex(i)}
                   className={`absolute w-full max-w-md cursor-pointer ${isActive ? 'pointer-events-auto' : 'pointer-events-none'}`}
                   style={{ perspective: 1000 }}>
-                  <div className={`glass rounded-3xl p-6 border transition-all ${isActive ? 'border-purple-500/50 shadow-2xl shadow-purple-500/20' : 'border-white/5'}`}>
+                  <div className={`glass-panel rounded-3xl p-6 border transition-all duration-300 ${isActive ? 'border-purple-500/40 shadow-2xl shadow-purple-500/10' : 'border-white/5 opacity-40'}`}>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs text-purple-400 font-medium tracking-wider">{agent.category}</span>
-                      <span className="text-xs text-zinc-500">{String(i + 1).padStart(2, '0')} / 15</span>
+                      <span className="text-xs text-purple-400 font-mono tracking-wider font-semibold">{agent.category}</span>
+                      <span className="text-xs text-zinc-500 font-mono">{String(i + 1).padStart(2, '0')} / 15</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center">

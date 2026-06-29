@@ -45,6 +45,19 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        neon: {
+          purple: "#bf5af2",
+          pink: "#ff2d55",
+          cyan: "#0a84ff",
+          blue: "#5e5ce6",
+          teal: "#30d158",
+        },
+        space: {
+          black: "#050508",
+          dark: "#0a0a14",
+          card: "rgba(10, 10, 20, 0.4)",
+          border: "rgba(255, 255, 255, 0.08)",
+        }
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -57,8 +70,9 @@ export default {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'float': 'float 6s ease-in-out infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
+        'glow-cyan': 'glow-cyan 2s ease-in-out infinite alternate',
         'wave': 'wave 2s ease-in-out infinite',
-        'spin-slow': 'spin 8s linear infinite',
+        'spin-slow': 'spin 12s linear infinite',
       },
       keyframes: {
         'gradient-y': {
@@ -76,6 +90,10 @@ export default {
         glow: {
           '0%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)' },
           '100%': { boxShadow: '0 0 40px rgba(139, 92, 246, 0.6), 0 0 80px rgba(139, 92, 246, 0.3)' },
+        },
+        'glow-cyan': {
+          '0%': { boxShadow: '0 0 20px rgba(10, 132, 255, 0.3)' },
+          '100%': { boxShadow: '0 0 40px rgba(10, 132, 255, 0.6), 0 0 80px rgba(10, 132, 255, 0.3)' },
         },
         wave: {
           '0%, 100%': { transform: 'scaleY(1)' },

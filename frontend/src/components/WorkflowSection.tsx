@@ -25,11 +25,11 @@ export default function WorkflowSection() {
       <div className="max-w-4xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-20">
           <p className="text-purple-400 text-sm font-medium tracking-widest mb-4">HOW IT WORKS</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">From first question to <span className="text-gradient">first placement.</span></h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">From first question to <span className="text-gradient-neon">first placement.</span></h2>
           <p className="text-zinc-400">A continuous, AI-guided journey — every step tracked, every conversation remembered.</p>
         </motion.div>
         <div ref={ref} className="relative">
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-purple-500/50 via-cyan-500/50 to-purple-500/50" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-purple-500/30 via-cyan-500/30 to-purple-500/30" />
           {steps.map((step, i) => (
             <motion.div key={step.num}
               initial={{ opacity: 0, x: step.side === 'left' ? -50 : 50 }}
@@ -37,10 +37,10 @@ export default function WorkflowSection() {
               transition={{ delay: i * 0.08, duration: 0.5 }}
               className={`flex items-center gap-6 mb-8 ${step.side === 'right' ? 'flex-row-reverse' : ''}`}>
               <div className={`flex-1 ${step.side === 'right' ? 'text-left' : 'text-right'}`}>
-                <div className="inline-block glass px-5 py-3 rounded-2xl text-sm text-zinc-200 hover:bg-white/10 transition-all cursor-default">{step.text}</div>
+                <div className="inline-block glass-panel px-5 py-3 rounded-2xl text-sm text-zinc-200 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all cursor-default">{step.text}</div>
               </div>
               <motion.div whileHover={{ scale: 1.2 }}
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm z-10 shadow-lg shadow-purple-500/30">
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm z-10 shadow-lg shadow-purple-500/20 border border-white/15">
                 {step.num}
               </motion.div>
               <div className="flex-1" />

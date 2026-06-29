@@ -8,8 +8,8 @@ cd adhoc-ai
 docker-compose up --build
 ```
 - Frontend: http://localhost:5173
-- Backend API: https://ad-1-ja69.onrender.com
-- API Docs: https://ad-1-ja69.onrender.com/docs
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
 ### Option 2: Local Development
 
@@ -21,7 +21,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 # For quick testing without PostgreSQL:
 # export DATABASE_URL="sqlite:///./adhoc_ai.db"
-uvicorn app.main:app --reload --port 8000
+uvicorn main:app --reload --port 8000
 ```
 
 **Terminal 2 — Frontend:**
