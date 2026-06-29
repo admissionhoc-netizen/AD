@@ -221,7 +221,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -1373,18 +1373,22 @@ async def update_knowledge(
     if current_user["role"] not in ["admin", "faculty"]:
         raise HTTPException(status_code=403, detail="Admin/Faculty access required")
 
-    update_data = {
-        "title": data.title,
-        "content": data.content,
-        "category": data.category,
-        "tags": data.tags,
-        "updated_by": current_user["id"],
-        "updated_at": datetime.utcnow().isoformat()
-    }
-    result = supabase.table("knowledge_base").update(update_data).eq("id", knowledge_id).execute()
-    if not result.data:
-        raise HTTPException(status_code=404, detail="Knowledge item not found")
-    return result.data[0]
+    try:
+        update_data = {
+            "title": data.title,
+            "content": data.content,
+            "category": data.category,
+            "tags": data.tags
+        }
+        result = supabase.table("knowledge_base").update(update_data).eq("id", knowledge_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Knowledge item not found")
+        return result.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating knowledge base record: {e}")
+        raise HTTPException(status_code=500, detail=f"Database update failed: {str(e)}")
 
 @app.delete("/api/knowledge/{knowledge_id}")
 async def delete_knowledge(

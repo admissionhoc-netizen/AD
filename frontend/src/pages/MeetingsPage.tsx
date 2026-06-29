@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { Users, Calendar, Plus, Trash2, Edit2, Eye, X, Check, Clock, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -43,6 +44,20 @@ function MeetingGroupsTab() {
     loadGroups()
     loadFacultyUsers()
   }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    if (showCreateModal || showMembersModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showCreateModal, showMembersModal])
 
   const loadGroups = async () => {
     setLoading(true)
@@ -228,17 +243,28 @@ function MeetingGroupsTab() {
         </table>
       </div>
 
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">{editingId ? 'Edit Group' : 'Create New Group'}</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-zinc-400 hover:text-white">
+      {showCreateModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-y-auto bg-black/75 backdrop-blur-2xl p-4">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-2xl rounded-[36px] border border-white/10 bg-zinc-950/95 p-6 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.8)] overflow-hidden max-h-[94vh]"
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
+              <div>
+                <h3 className="text-2xl font-semibold text-white">{editingId ? 'Edit Group' : 'Create New Group'}</h3>
+                <p className="text-sm text-zinc-400 mt-1">Set group details and description for faculty assignments.</p>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="h-11 w-11 rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 transition-colors flex items-center justify-center"
+                aria-label="Close modal"
+              >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="grid gap-4">
               <div>
                 <label className="block text-sm text-zinc-400 mb-2">Group Name</label>
                 <input
@@ -246,7 +272,7 @@ function MeetingGroupsTab() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., English Department"
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 />
               </div>
 
@@ -256,33 +282,38 @@ function MeetingGroupsTab() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Optional description..."
-                  rows={3}
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  rows={4}
+                  className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-4">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 rounded-xl bg-zinc-800 text-white hover:bg-zinc-700 transition-colors"
+                  className="w-full rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateGroup}
-                  className="flex-1 px-4 py-2 rounded-xl bg-purple-600 text-white hover:bg-purple-500 transition-colors font-semibold"
+                  className="w-full rounded-2xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-500 transition-colors"
                 >
                   {editingId ? 'Update' : 'Create'}
                 </button>
               </div>
             </div>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {showMembersModal && selectedGroup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+      {showMembersModal && selectedGroup && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-y-auto bg-black/75 backdrop-blur-2xl p-4">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-lg rounded-[32px] border border-white/10 bg-zinc-950/95 p-6 shadow-2xl shadow-black/50 max-h-[92vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-xl font-bold text-white">{selectedGroup.name}</h3>
@@ -348,7 +379,8 @@ function MeetingGroupsTab() {
               </button>
             </div>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -392,10 +424,14 @@ function CreateMeetingTab() {
 
     setLoading(true)
     try {
-      await createMeeting({
+      const payload = {
         ...formData,
         assigned_group_ids: selectedGroups
-      })
+      }
+
+      console.log('Create meeting payload:', payload)
+
+      await createMeeting(payload)
       toast.success('Meeting created successfully')
       setFormData({
         title: '',
@@ -409,9 +445,9 @@ function CreateMeetingTab() {
         status: 'scheduled'
       })
       setSelectedGroups([])
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to create meeting')
+    } catch (error: any) {
+      console.error('Create meeting failed:', error)
+      toast.error(error?.message ? `Failed to create meeting: ${error.message}` : 'Failed to create meeting')
     } finally {
       setLoading(false)
     }
@@ -866,7 +902,7 @@ export default function MeetingsPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative z-10">
       <div>
         <h1 className="text-3xl font-bold text-white mb-1">Meetings</h1>
         <p className="text-zinc-400">Manage faculty meetings, groups, schedules and attendance responses.</p>
@@ -905,8 +941,9 @@ export default function MeetingsPage() {
         ))}
       </div>
 
-      <div className="glass rounded-2xl overflow-hidden">
+      <div className="glass rounded-2xl">
         <div className="flex border-b border-white/10">
+
           {[
             { id: 'groups', label: 'Meeting Groups' },
             { id: 'create', label: 'Create Meeting' },

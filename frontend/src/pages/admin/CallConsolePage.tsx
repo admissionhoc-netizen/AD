@@ -142,52 +142,24 @@ export default function CallConsolePage() {
 
     const timeoutId = window.setTimeout(() => {
       setCallStatus('connected')
+      toast.success('Call connected')
     }, 5000)
 
     return () => window.clearTimeout(timeoutId)
   }, [callStatus])
 
   const initiateCall = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`
-      const payload = {
-        phone_number: fullPhoneNumber,
-        user_id: null,
-        agent_id: selectedAgent?.id ?? null,
-      }
-
-      console.log('Initiate call payload:', payload)
-
-      const response = await fetch('http://localhost:8000/api/calls/initiate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      })
-
-      console.log('Initiate call response status:', response.status)
-      const data = await response.json()
-      console.log('Initiate call response body:', data)
-
-      if (!response.ok) {
-        const detail = typeof data.detail === 'object' ? JSON.stringify(data.detail) : data.detail
-        throw new Error(detail || 'Failed to initiate call')
-      }
-
-      setCallStatus('connected')
-      toast.success('Call initiated successfully')
-    } catch (error) {
-      console.error('Initiate call error:', error)
-      setCallStatus('idle')
-      toast.error('Failed to initiate call')
-    }
+    // TODO: Twilio integration
+    // TODO: Deepgram STT
+    // TODO: Groq LLM
+    // TODO: ElevenLabs TTS
   }
 
   const endCall = async () => {
     // TODO: Twilio integration
+    // TODO: Deepgram STT
+    // TODO: Groq LLM
+    // TODO: ElevenLabs TTS
   }
 
   const handleMakeCall = async () => {
@@ -198,12 +170,14 @@ export default function CallConsolePage() {
     setCallStatus('dialing')
     setElapsedSeconds(0)
     setCallStartedAt(Date.now())
+    toast.success('Dialing...')
     await initiateCall()
   }
 
   const handleEndCall = async () => {
     await endCall()
     setCallStatus('ended')
+    toast.success('Call ended')
   }
 
   const callInProgress = callStatus === 'dialing' || callStatus === 'connected'
@@ -253,7 +227,7 @@ export default function CallConsolePage() {
 
           <div className="grid grid-cols-[120px_1fr] gap-3">
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-zinc-300">Code</span>
+              <span className="mb-2 block text-sm font-medium text-zinc-300">Country Code</span>
               <input
                 type="text"
                 value={countryCode}

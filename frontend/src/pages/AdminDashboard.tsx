@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, Phone, BookOpen, BarChart3, LogOut, Search, Bell, TrendingUp, Users, GraduationCap, Clock, CheckCircle, Mic, PhoneCall, Download, Settings, Calendar } from 'lucide-react'
+import { LayoutDashboard, Phone, BookOpen, LogOut, Search, Bell, Users, GraduationCap, Clock, CheckCircle, Mic, PhoneCall, Settings, Calendar } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCalls } from '../hooks/useCalls'
 import { apiFetch } from '../hooks/useApi'
@@ -203,20 +203,20 @@ function DashboardHome() {
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white">
-                  <span className="font-medium">
-                    {a.event_data?.agent}
-                  </span>
+                    <span className="font-medium">
+                      {a.event_data?.title ?? 'Untitled'}
+                    </span>
 
-                  {' — '}
+                    {' — '}
 
-                  <span className="text-zinc-400">
-                    {a.event_data?.message}
-                  </span>
+                    <span className="text-zinc-400">
+                      {a.event_data?.description ?? ''}
+                    </span>
                 </p>
               </div>
 
               <span className="text-xs text-zinc-500 flex-shrink-0">
-                {a.time}
+                {a.created_at ? new Date(a.created_at).toLocaleString() : a.time}
               </span>
             </div>
           ))}
@@ -335,7 +335,7 @@ function VoiceAgentsPage() {
       const token = localStorage.getItem('token')
 
       const response = await fetch(
-        `https://ad-1-ja69.onrender.com/api/agents/${agents[selectedAgent].id}`,
+        `http://localhost:8000/api/agents/${agents[selectedAgent].id}`,
         {
           method: 'PUT',
           headers: {
@@ -777,103 +777,6 @@ function KnowledgeBasePage() {
   )
 }
 
-function CallLogsPage() {
-  const { calls, loading } = useCalls(0, 50)
-
-  const totalCalls = calls.length
-  const completedCalls = calls.filter((call) => call.status === 'completed').length
-  const activeCalls = calls.filter((call) => call.status === 'initiated' || call.status === 'ringing' || call.status === 'answered').length
-  const uniqueCallers = new Set(calls.map((call) => call.caller || 'Unknown')).size
-
-  const formatTime = (timestamp: string | null | undefined) => {
-    if (!timestamp) return '—'
-    const diff = Date.now() - new Date(timestamp).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 60) return `${Math.max(mins, 0)}m ago`
-    const hrs = Math.floor(mins / 60)
-    if (hrs < 24) return `${hrs}h ago`
-    return `${Math.floor(hrs / 24)}d ago`
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-1">Call Logs</h1>
-        <p className="text-zinc-400">Review real telephony activity tracked from your voice agents.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[{
-          label: 'Total calls', value: totalCalls,
-          icon: Phone,
-          color: 'bg-purple-500/20 text-purple-300'
-        }, {
-          label: 'Completed', value: completedCalls,
-          icon: CheckCircle,
-          color: 'bg-emerald-500/20 text-emerald-300'
-        }, {
-          label: 'Active', value: activeCalls,
-          icon: TrendingUp,
-          color: 'bg-cyan-500/20 text-cyan-300'
-        }, {
-          label: 'Unique callers', value: uniqueCallers,
-          icon: Users,
-          color: 'bg-zinc-500/20 text-zinc-300'
-        }].map((metric) => (
-          <div key={metric.label} className="glass rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <metric.icon size={20} className="text-white/70" />
-              <span className={`text-xs ${metric.color} px-2 py-1 rounded-full`}>{metric.label}</span>
-            </div>
-            <div className="text-3xl font-bold text-white mb-1">{metric.value}</div>
-            <div className="text-sm text-zinc-500">{metric.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="glass rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h4 className="text-sm text-zinc-500 uppercase tracking-[0.2em]">Recent calls</h4>
-            <p className="text-xs text-zinc-500">Most recent agent call activity.</p>
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm text-white transition-all"><Download size={16} />Export CSV</button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-white/10 text-zinc-500">
-                <th className="px-4 py-3">Agent</th>
-                <th className="px-4 py-3">Caller</th>
-                <th className="px-4 py-3">Topic</th>
-                <th className="px-4 py-3">Duration</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={6} className="px-4 py-6 text-zinc-500">Loading call logs...</td></tr>
-              ) : calls.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-6 text-zinc-500">No call activity found.</td></tr>
-              ) : calls.map((call) => (
-                <tr key={call.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-4 text-white">{call.agent ?? 'Unknown'}</td>
-                  <td className="px-4 py-4 text-zinc-400">{call.caller ?? '—'}</td>
-                  <td className="px-4 py-4 text-zinc-400">{call.topic ?? '—'}</td>
-                  <td className="px-4 py-4 text-white">{Math.floor((call.duration || 0) / 60)}m {(call.duration || 0) % 60}s</td>
-                  <td className="px-4 py-4"><span className={`text-xs px-2 py-1 rounded-full ${call.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{call.status}</span></td>
-                  <td className="px-4 py-4 text-zinc-500">{formatTime(call.created_at)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function TelephonyPage() {
   const navigate = useNavigate()
@@ -981,64 +884,57 @@ export default function AdminDashboard() {
   const navItems = [
     { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/admin/knowledge', label: 'Knowledge Base', icon: BookOpen },
-    { path: '/admin/call-logs', label: 'Call Logs', icon: BarChart3 },
     { path: '/admin/telephony', label: 'Telephony', icon: Phone },
     { path: '/admin/meetings', label: 'Meetings', icon: Calendar },
   ]
   return (
     <div className="min-h-screen bg-transparent flex">
-      <aside className="w-64 glass-panel border-r border-white/10 flex flex-col backdrop-blur-2xl">
+      <aside className="w-64 border-r border-white/10 flex flex-col backdrop-blur-xl bg-black/30">
         <div className="p-6">
-          <Link to="/" className="flex items-center gap-2 group w-fit">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <span className="text-white font-bold text-sm">A</span>
-            </div>
-            <span className="font-extrabold text-lg text-white">ADhoc<span className="text-gradient-neon font-black">.ai</span></span>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center"><span className="text-white font-bold text-sm">A</span></div>
+            <span className="font-bold text-white">ADhoc<span className="text-purple-400">.ai</span></span>
           </Link>
         </div>
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => (
             <Link key={item.path} to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                location.pathname === item.path 
-                  ? 'bg-gradient-to-r from-purple-500/15 to-cyan-500/5 border border-purple-500/25 text-white shadow-lg shadow-purple-500/5' 
-                  : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
-              }`}>
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${location.pathname === item.path ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>
               <item.icon size={18} />{item.label}
             </Link>
           ))}
         </nav>
         <div className="p-4 border-t border-white/10">
-          <div className="glass-panel rounded-xl p-4 mb-4 border border-white/5 bg-white/[0.01]">
-            <p className="text-[10px] text-zinc-500 mb-1 font-mono tracking-wider">SIGNED IN</p>
-            <p className="text-sm text-white truncate font-medium">{user?.email}</p>
+          <div className="glass rounded-xl p-4 mb-4">
+            <p className="text-xs text-zinc-500 mb-1">SIGNED IN</p>
+            <p className="text-sm text-white truncate">{user?.email}</p>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all w-full text-left">
+          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-400 hover:text-white transition-colors w-full">
             <LogOut size={18} />Sign out
           </button>
         </div>
       </aside>
       <main className="flex-1 flex flex-col">
-        <header className="h-16 glass-panel border-b border-white/10 flex items-center justify-between px-6">
+        <header className="h-16 border-b border-white/10 flex items-center justify-between px-6">
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input type="text" placeholder="Search agents, calls, students..."
-                className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 hover:border-white/20 transition-all" />
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 transition-all" />
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white border border-white/5 transition-all relative">
-              <Bell size={18} /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all relative">
+              <Bell size={18} /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-purple-500" />
             </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center text-white font-extrabold text-sm shadow-md">{user?.avatar || 'A'}</div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">{user?.avatar || 'A'}</div>
           </div>
         </header>
-        <div className="flex-1 p-6 overflow-auto bg-transparent">
+        <div className="flex-1 p-6 overflow-auto">
           <Routes>
             <Route path="/" element={<DashboardHome />} />
             <Route path="/knowledge" element={<KnowledgeBasePage />} />
-            <Route path="/call-logs" element={<CallLogsPage />} />
+
             <Route path="/telephony" element={<TelephonyPage />} />
             <Route path="/voice-agents" element={<VoiceAgentsPage />} />
             <Route path="/call-console" element={<CallConsolePage />} />
